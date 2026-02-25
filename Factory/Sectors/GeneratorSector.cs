@@ -11,7 +11,7 @@ using MultiDomainTradingEngine.Entities;
 
 /// <summary>
 /// Responsible for bootstrapping the market environment by seeding economic sectors from external data.
-/// This factory ensures the system has a consistent foundation of industry verticals and baseline valuations.
+/// This factory ensures the system has a consistent foundation of industry verticals and baseline valuations...
 /// </summary>
 public class GeneratorSector
 {
