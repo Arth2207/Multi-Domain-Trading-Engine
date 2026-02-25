@@ -1,70 +1,69 @@
-﻿using System;
+﻿/// <summary>
+/// The entry point of the Multi-Domain Trading Engine (MDTE).
+/// This script orchestrates the bootstrap process, encompassing database schema reset,
+/// environment seeding, and the automated assembly of market agents.
+/// </summary>
+
+/* * ARCHITECTURAL FLOW:
+ * Step 1: Infrastructure Reset -> Ensures a clean state for GUID-based relations.
+ * Step 2: Economic Seeding -> Populates the "Economic DNA" (Sectors) from external JSON.
+ * Step 3: Agent Assembly -> Executes the factory pipeline for Corporations and Wallets.
+ * Step 4: Market Validation -> Uses Eager Loading to verify relational integrity.
+ */
+
+using System;
 using System.Linq;
-using System.Threading.Tasks;
 using Microsoft.EntityFrameworkCore;
 using MultiDomainTradingEngine.Data;
 using MultiDomainTradingEngine.Entities;
-using MultiDomainTradingEngine.Factory.Sectors;     // Verifique se a pasta é Sectors ou Sector
-using MultiDomainTradingEngine.Factory.Corporation; 
+using MultiDomainTradingEngine.Factory.Sectors;
+using MultiDomainTradingEngine.Factory.Corporation;
 using MultiDomainTradingEngine.Factory.Wallet;
-using MultiDomainTradingEngine.Rules.Wallet;
 
-Console.WriteLine("=== MDTE: Architectural & Market Validation (Senior Version) ===\n");
-
+// ----------------------------------------------------------------------------------
+// DATA CONTEXT INITIALIZATION
+// ----------------------------------------------------------------------------------
 using (var db = new TradingDbContext())
 {
-    // 1. Reset Total do Ambiente (Deleta o banco antigo e cria o novo com GUIDs)
-    Console.WriteLine("[Step 1] Recreating Database (Cleaning old schema)...");
+    // STEP 1: INFRASTRUCTURE REBOOT
+    // Wipes the existing SQLite file to prevent schema mismatch after GUID migration.
     db.Database.EnsureDeleted(); 
     db.Database.EnsureCreated();
 
-    // 2. Estação 1: Infraestrutura de Setores
-    Console.WriteLine("[Step 2] Seeding Sectors from JSON...");
+    // STEP 2: SECTOR BOOTSTRAPPING
+    // Injects the industry verticals required for corporation identity mapping.
     var sectorGenerator = new GeneratorSector(db);
     await sectorGenerator.InitializeSectorsAsync("Factory/Sectors/Sectors.json");
 
-    // 3. Estação 2 & 3: Linha de Montagem de Agentes
+    // STEP 3: CONTEXTUAL ASSEMBLY LINE (Pipeline)
+    // Instantiates factories to build complex entities with linked dependencies.
     var corpGenerator = new GeneratorCorporation(db);
     var walletGenerator = new GeneratorWallet(db);
     
-    Console.WriteLine("[Step 3] Assembling 10 Corporations via Pipeline...");
     for (int i = 0; i < 10; i++)
     {
-        // Cria a Identidade (Sorteando Setor Guid do banco)
+        // Phase A: Identity Construction (Assigning a random Sector GUID)
         var corp = await corpGenerator.BuildIdentityAsync($"Global Corp {i}", "S/A");
         
-        // Cria a Wallet vinculada
+        // Phase B: Financial Onboarding (Linked via 1:1 relationship)
         var wallet = await walletGenerator.BuildWalletAsync(corp.Id, 1000000m); 
         
-        // Aplica regra de negócio via Extension Method
+        // Phase C: Rule Application (Applying business logic via Extension Method)
         wallet.Deposit(50000m); 
     }
 
-    Console.WriteLine("Success: Pipeline execution complete.\n");
-
-    // 4. Validação (Agora trazendo o CORE SECTOR no resultado)
-    Console.WriteLine("[Step 4] Querying agents with Eager Loading:\n");
-    
+    // STEP 4: RELATIONAL VALIDATION (Eager Loading)
+    // Uses .Include() to perform SQL JOINs, bringing related data into memory.
     var agents = db.Corporations
-        .Include(c => c.CoreSector) // JOIN fundamental para trazer o nome do setor
-        .Include(c => c.Wallet)     
+        .Include(c => c.CoreSector) // Fetches the linked Industry info
+        .Include(c => c.Wallet)     // Fetches the protected balance info
         .ToList();
 
     foreach (var a in agents)
     {
-        Console.WriteLine(new string('-', 70));
-        Console.WriteLine($"CORP: {a.Name} {a.Suffixes}");
-        
-        // Acessando os dados do Setor que agora estão na memória
+        // Logging the results for audit and verification
         string sectorName = a.CoreSector?.Name ?? "N/A";
-        string primary = a.CoreSector?.PrimarySector ?? "N/A";
-        
-        Console.WriteLine($"CORE SECTOR: {sectorName} ({primary})");
-        
         string cash = a.Wallet?.Balance.ToString("N2") ?? "0.00";
-        Console.WriteLine($"WALLET BALANCE: $ {cash.PadLeft(20)}");
+        Console.WriteLine($"CORP: {a.Name} | SECTOR: {sectorName} | BALANCE: ${cash}");
     }
 }
-
-Console.WriteLine("\n" + new string('=', 70));
-Console.WriteLine("VALIDATION COMPLETE: Database reset and Core Sector is visible.");
