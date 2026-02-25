@@ -11,7 +11,7 @@ using MultiDomainTradingEngine.Data;
 namespace Multi_Domain_Trading_Engine.Migrations
 {
     [DbContext(typeof(TradingDbContext))]
-    [Migration("20260224003315_InitialCreate")]
+    [Migration("20260225002751_InitialCreate")]
     partial class InitialCreate
     {
         /// <inheritdoc />
@@ -20,23 +20,31 @@ namespace Multi_Domain_Trading_Engine.Migrations
 #pragma warning disable 612, 618
             modelBuilder.HasAnnotation("ProductVersion", "10.0.3");
 
-            modelBuilder.Entity("MultiDomainTradingEngine.Entities.Company", b =>
+            modelBuilder.Entity("MultiDomainTradingEngine.Entities.Corporation", b =>
                 {
                     b.Property<Guid>("Id")
                         .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid>("CoreSectorId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<DateTime>("CreatedAt")
                         .HasColumnType("TEXT");
 
                     b.Property<string>("Name")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
-                    b.Property<string>("Tier")
+                    b.Property<string>("Suffixes")
                         .IsRequired()
                         .HasColumnType("TEXT");
 
                     b.HasKey("Id");
 
-                    b.ToTable("Companies");
+                    b.HasIndex("CoreSectorId");
+
+                    b.ToTable("Corporations");
                 });
 
             modelBuilder.Entity("MultiDomainTradingEngine.Entities.Inventory", b =>
@@ -62,36 +70,6 @@ namespace Multi_Domain_Trading_Engine.Migrations
                     b.ToTable("Inventories");
                 });
 
-            modelBuilder.Entity("MultiDomainTradingEngine.Entities.TradeHistory", b =>
-                {
-                    b.Property<Guid>("Id")
-                        .ValueGeneratedOnAdd()
-                        .HasColumnType("TEXT");
-
-                    b.Property<string>("AssetSymbol")
-                        .IsRequired()
-                        .HasColumnType("TEXT");
-
-                    b.Property<Guid>("BuyerId")
-                        .HasColumnType("TEXT");
-
-                    b.Property<DateTime>("ExecutedAt")
-                        .HasColumnType("TEXT");
-
-                    b.Property<decimal>("Price")
-                        .HasColumnType("TEXT");
-
-                    b.Property<int>("Quantity")
-                        .HasColumnType("INTEGER");
-
-                    b.Property<Guid>("SellerId")
-                        .HasColumnType("TEXT");
-
-                    b.HasKey("Id");
-
-                    b.ToTable("TradeHistories");
-                });
-
             modelBuilder.Entity("MultiDomainTradingEngine.Entities.Wallet", b =>
                 {
                     b.Property<Guid>("CompanyId")
@@ -105,9 +83,47 @@ namespace Multi_Domain_Trading_Engine.Migrations
                     b.ToTable("Wallets");
                 });
 
+            modelBuilder.Entity("Sector", b =>
+                {
+                    b.Property<Guid>("Id")
+                        .ValueGeneratedOnAdd()
+                        .HasColumnType("TEXT");
+
+                    b.Property<Guid?>("CorporationId")
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("Name")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<string>("PrimarySector")
+                        .IsRequired()
+                        .HasColumnType("TEXT");
+
+                    b.Property<double>("ValuationGrade")
+                        .HasColumnType("REAL");
+
+                    b.HasKey("Id");
+
+                    b.HasIndex("CorporationId");
+
+                    b.ToTable("Sectors");
+                });
+
+            modelBuilder.Entity("MultiDomainTradingEngine.Entities.Corporation", b =>
+                {
+                    b.HasOne("Sector", "CoreSector")
+                        .WithMany("CorporationsWithThisCore")
+                        .HasForeignKey("CoreSectorId")
+                        .OnDelete(DeleteBehavior.Cascade)
+                        .IsRequired();
+
+                    b.Navigation("CoreSector");
+                });
+
             modelBuilder.Entity("MultiDomainTradingEngine.Entities.Inventory", b =>
                 {
-                    b.HasOne("MultiDomainTradingEngine.Entities.Company", "Company")
+                    b.HasOne("MultiDomainTradingEngine.Entities.Corporation", "Company")
                         .WithMany("Inventories")
                         .HasForeignKey("CompanyId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -118,7 +134,7 @@ namespace Multi_Domain_Trading_Engine.Migrations
 
             modelBuilder.Entity("MultiDomainTradingEngine.Entities.Wallet", b =>
                 {
-                    b.HasOne("MultiDomainTradingEngine.Entities.Company", "Company")
+                    b.HasOne("MultiDomainTradingEngine.Entities.Corporation", "Company")
                         .WithOne("Wallet")
                         .HasForeignKey("MultiDomainTradingEngine.Entities.Wallet", "CompanyId")
                         .OnDelete(DeleteBehavior.Cascade)
@@ -127,11 +143,26 @@ namespace Multi_Domain_Trading_Engine.Migrations
                     b.Navigation("Company");
                 });
 
-            modelBuilder.Entity("MultiDomainTradingEngine.Entities.Company", b =>
+            modelBuilder.Entity("Sector", b =>
                 {
+                    b.HasOne("MultiDomainTradingEngine.Entities.Corporation", null)
+                        .WithMany("AdjacentSectors")
+                        .HasForeignKey("CorporationId");
+                });
+
+            modelBuilder.Entity("MultiDomainTradingEngine.Entities.Corporation", b =>
+                {
+                    b.Navigation("AdjacentSectors");
+
                     b.Navigation("Inventories");
 
-                    b.Navigation("Wallet");
+                    b.Navigation("Wallet")
+                        .IsRequired();
+                });
+
+            modelBuilder.Entity("Sector", b =>
+                {
+                    b.Navigation("CorporationsWithThisCore");
                 });
 #pragma warning restore 612, 618
         }

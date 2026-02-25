@@ -1,0 +1,31 @@
+[
+  { "PrimarySector": "Recursos Naturais", "Name": "Mineração de Lítio e Terras Raras", "BaseValuation": 1.4 },
+  { "PrimarySector": "Recursos Naturais", "Name": "Extração de Minério de Ferro", "BaseValuation": 1.0 },
+  { "PrimarySector": "Recursos Naturais", "Name": "Perfuração de Gás Natural", "BaseValuation": 1.1 },
+  { "PrimarySector": "Recursos Naturais", "Name": "Recuperação de Metais Preciosos", "BaseValuation": 1.3 },
+  { "PrimarySector": "Recursos Naturais", "Name": "Extração de Água Subterrânea", "BaseValuation": 0.9 },
+
+  { "PrimarySector": "Tecnologia", "Name": "Desenvolvimento de IA Generativa", "BaseValuation": 1.7 },
+  { "PrimarySector": "Tecnologia", "Name": "Segurança Cibernética Quântica", "BaseValuation": 1.8 },
+  { "PrimarySector": "Tecnologia", "Name": "Fabricação de Semicondutores", "BaseValuation": 2.0 },
+  { "PrimarySector": "Tecnologia", "Name": "Computação em Nuvem e Borda", "BaseValuation": 1.5 },
+  { "PrimarySector": "Tecnologia", "Name": "Sistemas Operacionais Autônomos", "BaseValuation": 1.6 },
+
+  { "PrimarySector": "Energia", "Name": "Geração Solar de Alta Eficiência", "BaseValuation": 1.2 },
+  { "PrimarySector": "Energia", "Name": "Fissão Nuclear Modular (SMR)", "BaseValuation": 1.4 },
+  { "PrimarySector": "Energia", "Name": "Refino de Hidrogênio Verde", "BaseValuation": 1.5 },
+  { "PrimarySector": "Energia", "Name": "Armazenamento em Baterias de Estado Sólido", "BaseValuation": 1.6 },
+  { "PrimarySector": "Energia", "Name": "Manutenção de Parques Eólicos", "BaseValuation": 1.1 },
+
+  { "PrimarySector": "Manufatura Pesada", "Name": "Construção de Estruturas Aeroespaciais", "BaseValuation": 1.8 },
+  { "PrimarySector": "Manufatura Pesada", "Name": "Produção de Blindagem Composta", "BaseValuation": 1.5 },
+  { "PrimarySector": "Manufatura Pesada", "Name": "Robótica Industrial Pesada", "BaseValuation": 1.4 },
+  { "PrimarySector": "Manufatura Pesada", "Name": "Fundição de Ligas de Titânio", "BaseValuation": 1.3 },
+  { "PrimarySector": "Manufatura Pesada", "Name": "Montagem de Veículos Elétricos", "BaseValuation": 1.2 },
+
+  { "PrimarySector": "Saúde e Biotecnologia", "Name": "Engenharia Genética e CRISPR", "BaseValuation": 1.9 },
+  { "PrimarySector": "Saúde e Biotecnologia", "Name": "Manufatura de Órgãos Sintéticos", "BaseValuation": 2.1 },
+  { "PrimarySector": "Saúde e Biotecnologia", "Name": "Farmacêutica de Precisão", "BaseValuation": 1.7 },
+  { "PrimarySector": "Saúde e Biotecnologia", "Name": "Neurotecnologia Aplicada", "BaseValuation": 2.0 },
+  { "PrimarySector": "Saúde e Biotecnologia", "Name": "Diagnóstico por Nanossensores", "BaseValuation": 1.8 }
+]

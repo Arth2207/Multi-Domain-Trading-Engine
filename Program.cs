@@ -1,57 +1,70 @@
 ﻿using System;
-using System.Collections.Generic;
 using System.Linq;
+using System.Threading.Tasks;
+using Microsoft.EntityFrameworkCore;
 using MultiDomainTradingEngine.Data;
 using MultiDomainTradingEngine.Entities;
-using MultiDomainTradingEngine.Utils;
-using Microsoft.EntityFrameworkCore;
+using MultiDomainTradingEngine.Factory.Sectors;     // Verifique se a pasta é Sectors ou Sector
+using MultiDomainTradingEngine.Factory.Corporation; 
+using MultiDomainTradingEngine.Factory.Wallet;
+using MultiDomainTradingEngine.Rules.Wallet;
 
-Console.WriteLine("=== MDTE: Architectural & Market Validation ===\n");
+Console.WriteLine("=== MDTE: Architectural & Market Validation (Senior Version) ===\n");
 
 using (var db = new TradingDbContext())
 {
-    // 1. Limpeza do ambiente: Garante que você não está vendo dados "sujos" de testes antigos
-    Console.WriteLine("[Step 1] Recreating Database...");
+    // 1. Reset Total do Ambiente (Deleta o banco antigo e cria o novo com GUIDs)
+    Console.WriteLine("[Step 1] Recreating Database (Cleaning old schema)...");
     db.Database.EnsureDeleted(); 
     db.Database.EnsureCreated();
 
-    // 2. Geração em Massa: Vamos criar 10 agentes para ver a aleatoriedade em ação
-    Console.WriteLine("[Step 2] Generating 10 random market agents with billions...");
+    // 2. Estação 1: Infraestrutura de Setores
+    Console.WriteLine("[Step 2] Seeding Sectors from JSON...");
+    var sectorGenerator = new GeneratorSector(db);
+    await sectorGenerator.InitializeSectorsAsync("Factory/Sectors/Sectors.json");
+
+    // 3. Estação 2 & 3: Linha de Montagem de Agentes
+    var corpGenerator = new GeneratorCorporation(db);
+    var walletGenerator = new GeneratorWallet(db);
+    
+    Console.WriteLine("[Step 3] Assembling 10 Corporations via Pipeline...");
     for (int i = 0; i < 10; i++)
     {
-        var randomComp = MarketGenerator.CreateRandomCompany();
-        db.Companies.Add(randomComp);
+        // Cria a Identidade (Sorteando Setor Guid do banco)
+        var corp = await corpGenerator.BuildIdentityAsync($"Global Corp {i}", "S/A");
+        
+        // Cria a Wallet vinculada
+        var wallet = await walletGenerator.BuildWalletAsync(corp.Id, 1000000m); 
+        
+        // Aplica regra de negócio via Extension Method
+        wallet.Deposit(50000m); 
     }
 
-    // O SaveChanges aqui valida se os seus novos construtores e private sets funcionam com o EF Core
-    db.SaveChanges();
-    Console.WriteLine("Success: Data persisted to SQLite.\n");
+    Console.WriteLine("Success: Pipeline execution complete.\n");
 
-    // 3. Validação de Integridade: Recuperando os dados com Eager Loading (Include)
-    Console.WriteLine("[Step 3] Querying agents and validating tiered balances:\n");
+    // 4. Validação (Agora trazendo o CORE SECTOR no resultado)
+    Console.WriteLine("[Step 4] Querying agents with Eager Loading:\n");
     
-    var agents = db.Companies
-        .Include(c => c.Wallet)
-        .Include(c => c.Inventories)
-        .OrderByDescending(c => c.Tier) // Organiza para ver os mais ricos primeiro
+    var agents = db.Corporations
+        .Include(c => c.CoreSector) // JOIN fundamental para trazer o nome do setor
+        .Include(c => c.Wallet)     
         .ToList();
 
     foreach (var a in agents)
     {
-        Console.WriteLine(new string('-', 60));
-        Console.WriteLine($"AGENT: {a.Name.ToUpper().PadRight(25)} | TIER: {a.Tier}");
+        Console.WriteLine(new string('-', 70));
+        Console.WriteLine($"CORP: {a.Name} {a.Suffixes}");
         
-        // Formatação N0 para facilitar a leitura de bilhões
-        string cash = a.Wallet?.Balance.ToString("N0") ?? "0";
-        Console.WriteLine($"CASH:  $ {cash.PadLeft(18)}");
+        // Acessando os dados do Setor que agora estão na memória
+        string sectorName = a.CoreSector?.Name ?? "N/A";
+        string primary = a.CoreSector?.PrimarySector ?? "N/A";
         
-        Console.WriteLine("ASSETS IN STOCK:");
-        foreach (var inv in a.Inventories)
-        {
-            Console.WriteLine($"  > {inv.AssetSymbol.PadRight(15)} | {inv.Quantity:N0} units");
-        }
+        Console.WriteLine($"CORE SECTOR: {sectorName} ({primary})");
+        
+        string cash = a.Wallet?.Balance.ToString("N2") ?? "0.00";
+        Console.WriteLine($"WALLET BALANCE: $ {cash.PadLeft(20)}");
     }
 }
 
-Console.WriteLine("\n" + new string('=', 60));
-Console.WriteLine("VALIDATION COMPLETE: Your Engine Infrastructure is Solid.");
+Console.WriteLine("\n" + new string('=', 70));
+Console.WriteLine("VALIDATION COMPLETE: Database reset and Core Sector is visible.");
